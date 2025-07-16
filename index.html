@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stopwatch & Countdown</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <script src="script.js" defer></script>
+</head>
+<body class="dark stopwatch-mode">
+
+  <!-- Top-right Controls -->
+  <div class="top-right-controls">
+    <button id="toggleTheme" onclick="toggleTheme()" class="theme-btn">🌙</button>
+    <button id="modeToggle" onclick="toggleMode()" class="pill-btn">Switch to Countdown</button>
+  </div>
+
+  <div class="container">
+
+    <!-- Clock + Real Time -->
+    <canvas id="analogClock" width="120" height="120"></canvas>
+    <div id="realTimeClock"></div>
+
+    <!-- Timer Display + Progress Ring -->
+    <div class="ringed-timer-wrapper">
+      <div class="timer-Display">00 : 00 : 00 : 00</div>
+
+      <!-- Circular Progress Ring -->
+      <svg class="progress-ring" id="progressRing" width="120" height="120" style="display: none;">
+        <circle class="ring-bg" r="60" cx="80" cy="100"></circle>
+        <circle class="ring" r="60" cx="80" cy="100"></circle>
+      </svg>
+    </div>
+
+    <!-- Countdown Input -->
+    <div class="alarm-box" style="display: none;">
+      <h3>⏳ Set Countdown Time</h3>
+      <div class="manual-inputs">
+        <input type="number" id="inputH" placeholder="HH" min="0" max="99">
+        <input type="number" id="inputM" placeholder="MM" min="0" max="59">
+        <input type="number" id="inputS" placeholder="SS" min="0" max="59">
+      </div>
+      <button onclick="setCountdown()">Set Countdown</button>
+    </div>
+
+    <!-- Laps -->
+    <ul class="laps"></ul>
+
+    <!-- Control Buttons -->
+    <div class="buttons">
+      <button id="startTimer" onclick="start()">Start</button>
+      <button id="pauseTimer" onclick="pause()">Pause</button>
+      <button id="resetTime" onclick="reset()">Reset</button>
+      <button id="restartTimer" onclick="restart()">Restart</button>
+      <button id="lap" onclick="lap()">Lap</button>
+      <button id="resetLap" onclick="resetLap()">Reset Laps</button>
+      <button onclick="exportLaps()">📄 Export Laps</button>
+      <button id="stopAlarmBtn" onclick="stopAlarm()" style="display:none;">🔕 Stop Alarm</button>
+      <button id="snoozeBtn" onclick="snoozeAlarm()" style="display:none;">😴 Snooze 5s</button>
+    </div>
+
+    <!-- Loader & Toast -->
+    <div id="loader" class="loader-overlay"><div class="spinner"></div></div>
+    <div id="toast" class="toast"></div>
+  </div>
+</body>
+</html>
