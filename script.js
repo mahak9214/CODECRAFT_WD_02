@@ -20,6 +20,7 @@ const ring = document.querySelector(".ring");
 const realTimeClock = document.getElementById("realTimeClock");
 const analogClock = document.getElementById("analogClock");
 const loader = document.getElementById("loader");
+const exportLapsBtn = document.getElementById("exportLapsBtn");
 
 let alarmAudio = new Audio("alarm.mp3");
 alarmAudio.crossOrigin = "anonymous";
@@ -97,8 +98,12 @@ const resetLap = () => {
 };
 
 const exportLaps = () => {
-  if (!lapsData.length) return;
-  const blob = new Blob(["Stopwatch Laps:\n" + lapsData.map((lap, i) => `Lap ${i + 1}: ${lap}`).join("\n")], { type: "text/plain" });
+  if (!lapsData.length) {
+    toastMessage("⚠️ No laps to export");
+    return;
+  }
+  const content = "Stopwatch Laps:\n" + lapsData.map((lap, i) => `Lap ${i + 1}: ${lap}`).join("\n");
+  const blob = new Blob([content], { type: "text/plain" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
@@ -107,6 +112,10 @@ const exportLaps = () => {
   URL.revokeObjectURL(url);
   toastMessage("📄 Laps exported");
 };
+
+if (exportLapsBtn) {
+  exportLapsBtn.addEventListener("click", exportLaps);
+}
 
 const run = () => {
   if (mode === "stopwatch") {
@@ -230,8 +239,7 @@ const toggleMode = () => {
   alarmBox.style.display = isCountdown ? "block" : "none";
   document.getElementById("lap").style.display = isCountdown ? "none" : "inline-block";
   document.getElementById("resetLap").style.display = isCountdown ? "none" : "inline-block";
-  document.querySelector('button[onclick="exportLaps()"]').style.display = isCountdown ? "none" : "inline-block";
-
+ document.getElementById("exportLapsBtn").style.display = isCountdown ? "none" : "inline-block";
   toastMessage(`Mode switched to ${mode.toUpperCase()}`);
 };
 
