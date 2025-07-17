@@ -425,7 +425,7 @@ button:active::after {
   animation: ripple 0.6s linear forwards;
 }
 body.light {
-  background: linear-gradient(135deg, #f1a1a1, #eb9d9d);
+  background: linear-gradient(135deg, #a6dce9, #9de7eb);
   color: #222;
 }
 
