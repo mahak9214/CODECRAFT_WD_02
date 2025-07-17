@@ -12,28 +12,34 @@ html, body {
 
 body {
   font-family: 'Roboto', sans-serif;
-  background-color: #0a0f1c;
   color: #00ffc3;
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: 20px;
   overflow: auto;
-  background-size: cover;
+  background: linear-gradient(135deg, #1e3c72, #4869a1);
+  background-size: 400% 400%;
+  animation: gradientShift 15s ease infinite;
   background-position: center;
   background-repeat: no-repeat;
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
 body::before {
   content: "";
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  backdrop-filter: blur(10px) brightness(0.6);
-  background-color: rgba(62, 61, 61, 0.6);
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.4), rgba(0,0,0,0.6));
   z-index: -1;
 }
 
-/* TOP BAR (Mute Left, Theme + Mode Right) */
+/* TOP BAR */
 .top-bar {
   width: 100%;
   max-width: 600px;
@@ -49,6 +55,12 @@ body::before {
   border: none;
   color: #fff;
   cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+#muteToggle:hover {
+  color: #00ffc3;
+  transform: scale(1.1);
 }
 
 .right-controls {
@@ -63,11 +75,19 @@ body::before {
   padding: 8px 14px;
   border-radius: 8px;
   cursor: pointer;
+  transition: all 0.3s ease;
 }
 
 .theme-btn:hover, .pill-btn:hover {
   background: #0ea5e9;
   color: #fff;
+}
+
+.pill-btn.active {
+  background: #00ffc3;
+  color: #0f172a;
+  font-weight: bold;
+  box-shadow: 0 4px 12px rgba(0, 255, 195, 0.4);
 }
 
 /* MAIN CONTAINER */
@@ -81,12 +101,14 @@ body::before {
   margin: auto;
   padding: 20px;
   gap: 16px;
-  background: rgba(13, 13, 13, 0.6);
+  background: rgba(15, 23, 42, 0.6);
   border-radius: 16px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(12px) brightness(1.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
-/* ANALOG CLOCK */
+/* CLOCKS */
 #analogClock {
   width: 100%;
   max-width: 160px;
@@ -136,29 +158,29 @@ body::before {
   stroke-dasharray: 502.65;
   stroke-dashoffset: 502.65;
   transition: stroke-dashoffset 0.4s ease;
+  filter: drop-shadow(0 0 8px #00ffd1);
+}
+
+@keyframes glow-ring {
+  0% { stroke: #00ffc3; filter: drop-shadow(0 0 4px #00ffc3); }
+  50% { stroke: #ff6b6b; filter: drop-shadow(0 0 10px #ff6b6b); }
+  100% { stroke: #00ffc3; filter: drop-shadow(0 0 4px #00ffc3); }
 }
 
 .ring.pulse {
-  animation: pulse-ring 1s infinite;
-  filter: drop-shadow(0 0 6px #ff6b6b);
+  animation: glow-ring 2s infinite;
 }
 
-@keyframes pulse-ring {
-  0% { stroke: #00ffd1; }
-  50% { stroke: #ff6b6b; }
-  100% { stroke: #00ffd1; }
-}
-
-/* COUNTDOWN SETUP BOX */
+/* ALARM BOX */
 .alarm-box {
-  background: rgba(255, 255, 255, 0.06);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
   border-radius: 16px;
   padding: 20px;
   max-width: 360px;
   width: 100%;
   text-align: center;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
 .alarm-box h3 {
@@ -194,14 +216,17 @@ body::before {
   font-size: 1rem;
   border: none;
   border-radius: 8px;
-  background-color: #00ffc3;
+  background: linear-gradient(135deg, #00ffc3, #00c7a8);
   color: #0f172a;
   font-weight: bold;
   cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 14px rgba(0, 255, 195, 0.3);
 }
 
 .alarm-box button:hover {
-  background-color: #00c7a8;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 255, 195, 0.5);
 }
 
 /* BUTTONS */
@@ -214,17 +239,21 @@ body::before {
 }
 
 .buttons button {
-  background: #1e3a8a;
-  color: #fff;
+  background: linear-gradient(135deg, #00ffc3, #00c7a8);
+  color: #0f172a;
   padding: 10px 16px;
   border: none;
   border-radius: 8px;
   cursor: pointer;
   font-size: 1rem;
+  font-weight: bold;
+  transition: transform 0.2s ease, box-shadow 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 255, 195, 0.3);
 }
 
 .buttons button:hover {
-  background: #2563eb;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 255, 195, 0.5);
 }
 
 /* LAPS */
@@ -320,6 +349,7 @@ body::before {
     padding: 8px 12px;
   }
 }
+
 body.countdown-mode .container {
   gap: 8px;
   padding: 16px;
@@ -337,6 +367,89 @@ body.countdown-mode .alarm-box {
   margin-top: 8px;
   padding: 16px;
 }
+
 body.countdown-mode .laps {
   display: none;
+}
+.loader-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.spinner {
+  border: 6px solid rgba(255, 255, 255, 0.3);
+  border-top: 6px solid #7fc7b6;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+button {
+  position: relative;
+  overflow: hidden;
+}
+
+button::after {
+  content: "";
+  position: absolute;
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 50%;
+  transform: scale(0);
+  animation: ripple 0.6s linear;
+  pointer-events: none;
+}
+
+@keyframes ripple {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+button:active::after {
+  top: 50%;
+  left: 50%;
+  width: 100px;
+  height: 100px;
+  transform: translate(-50%, -50%) scale(0);
+  animation: ripple 0.6s linear forwards;
+}
+body.light {
+  background: linear-gradient(135deg, #f1a1a1, #eb9d9d);
+  color: #222;
+}
+
+body.light .container,
+body.light .alarm-box {
+  background: rgba(174, 140, 140, 0.6);
+  color: #222;
+}
+
+body.light .timer-Display {
+  background: rgba(0, 0, 0, 0.05);
+  color: #111;
+}
+
+body.light .ring {
+  stroke: #0077ff;
+  filter: drop-shadow(0 0 8px #0077ff);
+}
+body.dark.stopwatch-mode {
+  color: #00ffc3;
+  text-shadow: 0 0 6px rgba(0, 255, 195, 0.8);
+}
+
+.timer-Display {
+  color: #00ffc3;
+  text-shadow: 0 0 6px rgba(0, 255, 195, 0.6);
 }
