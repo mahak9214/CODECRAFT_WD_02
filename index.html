@@ -9,29 +9,28 @@
   <script src="script.js" defer></script>
 </head>
 <body class="dark stopwatch-mode">
-
-  <!-- Top-right Controls -->
-  <div class="top-right-controls">
-    <button id="toggleTheme" onclick="toggleTheme()" class="theme-btn">🌙</button>
-    <button id="modeToggle" onclick="toggleMode()" class="pill-btn">Switch to Countdown</button>
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <button id="muteToggle" onclick="toggleMute()">🔊</button>
+    <div class="right-controls">
+      <button id="toggleTheme" onclick="toggleTheme()" class="theme-btn">🌙</button>
+      <button id="modeToggle" onclick="toggleMode()" class="pill-btn">Switch to Countdown</button>
+    </div>
   </div>
 
   <div class="container">
-
-    <!-- Clock + Real Time -->
+    <!-- Analog Clock -->
     <canvas id="analogClock" width="120" height="120"></canvas>
     <div id="realTimeClock"></div>
 
-    <!-- Timer Display + Progress Ring -->
-    <div class="ringed-timer-wrapper">
-      <div class="timer-Display">00 : 00 : 00 : 00</div>
+    <!-- Timer Display -->
+    <div class="timer-Display">00 : 00 : 00 : 00</div>
 
-      <!-- Circular Progress Ring -->
-      <svg class="progress-ring" id="progressRing" width="120" height="120" style="display: none;">
-        <circle class="ring-bg" r="60" cx="80" cy="100"></circle>
-        <circle class="ring" r="60" cx="80" cy="100"></circle>
-      </svg>
-    </div>
+    <!-- Progress Ring -->
+    <svg class="progress-ring" id="progressRing" width="160" height="120" style="display: none;">
+      <circle class="ring-bg" r="60" cx="70" cy="70"></circle>
+      <circle class="ring" r="60" cx="70" cy="70"></circle>
+    </svg>
 
     <!-- Countdown Input -->
     <div class="alarm-box" style="display: none;">
@@ -47,7 +46,7 @@
     <!-- Laps -->
     <ul class="laps"></ul>
 
-    <!-- Control Buttons -->
+    <!-- Buttons -->
     <div class="buttons">
       <button id="startTimer" onclick="start()">Start</button>
       <button id="pauseTimer" onclick="pause()">Pause</button>
@@ -60,7 +59,7 @@
       <button id="snoozeBtn" onclick="snoozeAlarm()" style="display:none;">😴 Snooze 5s</button>
     </div>
 
-    <!-- Loader & Toast -->
+    <!-- Loader + Toast -->
     <div id="loader" class="loader-overlay"><div class="spinner"></div></div>
     <div id="toast" class="toast"></div>
   </div>

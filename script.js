@@ -4,6 +4,11 @@ let timer;
 let mode = "stopwatch";
 let theme = localStorage.getItem("theme") || "dark";
 let isMuted = localStorage.getItem("muted") === "true";
+let audioUnlocked = false;
+let alarmTimeout;
+let alarmPlayed = false;
+let isRunning = false;
+let lapsData = [];
 
 const display = document.querySelector(".timer-Display");
 const laps = document.querySelector(".laps");
@@ -16,9 +21,23 @@ const realTimeClock = document.getElementById("realTimeClock");
 const analogClock = document.getElementById("analogClock");
 const loader = document.getElementById("loader");
 
-let alarmAudio = new Audio("https://assets.mixkit.co/sfx/preview/mixkit-alarm-digital-clock-beep-989.mp3");
+let alarmAudio = new Audio("alarm.mp3");
 alarmAudio.crossOrigin = "anonymous";
 alarmAudio.loop = true;
+alarmAudio.volume = 1.0;
+
+document.body.addEventListener("click", () => {
+  if (!audioUnlocked) {
+    alarmAudio.play().then(() => {
+      alarmAudio.pause();
+      alarmAudio.currentTime = 0;
+      audioUnlocked = true;
+      toastMessage("🔓 Alarm sound enabled");
+    }).catch(() => {
+      toastMessage("⚠️ Click again to enable alarm");
+    });
+  }
+}, { once: true });
 
 
 const backgrounds = {
@@ -32,18 +51,14 @@ const backgrounds = {
   }
 };
 
-const getTimer = () => (
-  `${String(h).padStart(2, "0")} : ${String(m).padStart(2, "0")} : ${String(s).padStart(2, "0")} : ${String(ms).padStart(2, "0")}`
-);
+const getTimer = () => `${String(h).padStart(2, "0")} : ${String(m).padStart(2, "0")} : ${String(s).padStart(2, "0")} : ${String(ms).padStart(2, "0")}`;
 
 const updateTimerDisplay = () => {
   const timeStr = getTimer();
-  const html = timeStr.split("").map(char =>
+  display.innerHTML = timeStr.split("").map(char =>
     char === ":" ? `<span class="digit colon">:</span>` : `<span class="digit">${char}</span>`
   ).join("");
-  display.innerHTML = html;
-  const digits = display.querySelectorAll(".digit");
-  digits.forEach(d => {
+  display.querySelectorAll(".digit").forEach(d => {
     d.classList.remove("flip");
     void d.offsetWidth;
     d.classList.add("flip");
@@ -57,9 +72,45 @@ const start = () => {
   }
   if (!timer) {
     timer = setInterval(run, 10);
+    isRunning = true;
     toastMessage("▶ Timer started");
   }
 };
+const pause = () => {
+  clearInterval(timer);
+  isRunning = false;
+  timer = null;
+  toastMessage("⏸ Timer paused");
+};
+
+const lap = () => {
+  if (!isRunning || mode !== "stopwatch") return;
+  const time = getTimer();
+  const lapItem = document.createElement("li");
+  lapItem.textContent = `Lap ${lapsData.length + 1}: ${time}`;
+  laps.appendChild(lapItem);
+  lapsData.push(time);
+};
+
+const resetLap = () => {
+  laps.innerHTML = "";
+  lapsData = [];
+  toastMessage("🗑 Laps cleared");
+};
+
+const exportLaps = () => {
+  if (lapsData.length === 0) return;
+  const content = "Stopwatch Laps:\n" + lapsData.map((lap, i) => `Lap ${i + 1}: ${lap}`).join("\n");
+  const blob = new Blob([content], { type: "text/plain" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "laps.txt";
+  link.click();
+  URL.revokeObjectURL(url);
+  toastMessage("📄 Laps exported");
+};
+
 
 const run = () => {
   if (mode === "stopwatch") {
@@ -69,11 +120,13 @@ const run = () => {
     if (m === 60) { m = 0; h++; }
   } else {
     let total = h * 360000 + m * 6000 + s * 100 + ms;
-    if (total <= 0) {
+
+    if (total <= 0 && !alarmPlayed) {
       stopTimer();
       h = m = s = ms = 0;
       updateTimerDisplay();
       updateProgressRing();
+      alarmPlayed = true; // Prevent multiple triggers
       triggerAlarm();
       return;
     }
@@ -83,22 +136,11 @@ const run = () => {
     if (s < 0) { s = 59; m--; }
     if (m < 0) { m = 59; h--; }
   }
+
   updateTimerDisplay();
   updateProgressRing();
 };
 
-document.body.addEventListener("click", () => {
-  alarmAudio.play().then(() => {
-    alarmAudio.pause();
-    alarmAudio.currentTime = 0;
-  }).catch(() => {});
-}, { once: true });
-
-const pause = () => {
-  clearInterval(timer);
-  timer = null;
-  toastMessage("⏸ Timer paused");
-};
 
 const stopTimer = () => {
   clearInterval(timer);
@@ -110,6 +152,7 @@ const reset = () => {
   ms = s = m = h = 0;
   updateTimerDisplay();
   updateProgressRing();
+  alarmPlayed = false;
   toastMessage("🔁 Timer reset");
 };
 
@@ -120,53 +163,42 @@ const restart = () => {
 };
 
 const setCountdown = () => {
-  h = parseInt(document.getElementById("inputH").value) || 0;
-  m = parseInt(document.getElementById("inputM").value) || 0;
-  s = parseInt(document.getElementById("inputS").value) || 0;
+  h = +document.getElementById("inputH").value || 0;
+  m = +document.getElementById("inputM").value || 0;
+  s = +document.getElementById("inputS").value || 0;
   ms = 0;
   countdownTotal = (h * 3600 + m * 60 + s) * 100;
-  if (countdownTotal === 0) {
-    toastMessage("⚠️ Set a valid time");
-    return;
-  }
+  if (countdownTotal === 0) return toastMessage("⚠️ Set a valid time");
+
   document.getElementById("progressRing").style.display = "block";
   updateTimerDisplay();
   updateProgressRing();
+  alarmPlayed = false;
   showLoader();
   toastMessage("⏲ Countdown set");
 };
 
-const lap = () => {
-  if (timer && mode === "stopwatch") {
-    const li = document.createElement("li");
-    li.innerText = getTimer();
-    laps.appendChild(li);
-    toastMessage("📌 Lap recorded");
-  } else {
-    toastMessage("❌ Laps are only available in stopwatch mode");
-  }
-};
-
-const resetLap = () => {
-  laps.innerHTML = "";
-  toastMessage("🧹 Laps cleared");
-};
-
 const triggerAlarm = () => {
-  if (!isMuted) {
-    alarmAudio.play().catch(err => {
-      console.warn("Alarm audio playback failed:", err);
-      toastMessage("🔇 Unable to play alarm (browser blocked?)");
-    });
+  if (!isMuted && audioUnlocked) {
+    alarmAudio.play().catch(() => toastMessage("🔇 Alarm blocked. Click to enable."));
+  } else if (!audioUnlocked) {
+    toastMessage("🔒 Click once on screen to enable alarm sound");
   }
   stopAlarmBtn.style.display = snoozeBtn.style.display = "inline-block";
-  toastMessage("⏰ Time's up!");
   ring.classList.add("pulse");
+  toastMessage("⏰ Time's up!");
+
+  alarmTimeout = setTimeout(() => {
+    stopAlarm();
+    toastMessage("🔕 Alarm auto-stopped after 30s");
+  }, 30000);
 };
 
 const stopAlarm = () => {
   alarmAudio.pause();
+  alarmPlayed = false;
   alarmAudio.currentTime = 0;
+  clearTimeout(alarmTimeout);
   stopAlarmBtn.style.display = snoozeBtn.style.display = "none";
   ring.classList.remove("pulse");
   toastMessage("🔕 Alarm stopped");
@@ -180,6 +212,44 @@ const snoozeAlarm = () => {
   toastMessage("😴 Snoozed for 5 seconds");
 };
 
+const toggleMute = () => {
+  isMuted = !isMuted;
+  localStorage.setItem("muted", isMuted);
+  document.getElementById("muteToggle").innerText = isMuted ? "🔇" : "🔊";
+
+  // 🔕 Immediately stop alarm sound if muted
+  if (isMuted && !alarmAudio.paused) {
+    alarmAudio.pause();
+    alarmAudio.currentTime = 0;
+  }
+
+  toastMessage(`Sound ${isMuted ? "Muted" : "Unmuted"}`);
+};
+
+
+const toastMessage = (msg) => {
+  toast.innerText = msg;
+  toast.classList.add("show");
+  setTimeout(() => toast.classList.remove("show"), 3000);
+};
+
+const toggleTheme = () => {
+  theme = theme === "dark" ? "light" : "dark";
+  localStorage.setItem("theme", theme);
+  document.body.className = `${theme} ${mode}-mode`;
+  applyBackground();
+  const themeBtn = document.getElementById("toggleTheme");
+  themeBtn.innerText = theme === "dark" ? "🌙" : "☀️";
+  themeBtn.classList.add("rotated");
+  setTimeout(() => themeBtn.classList.remove("rotated"), 400);
+  toastMessage(`Theme: ${theme.toUpperCase()}`);
+};
+
+const applyBackground = () => {
+  const image = backgrounds[theme][mode];
+  document.body.style.backgroundImage = `url('${image}')`;
+};
+
 const updateProgressRing = () => {
   if (!ring || mode !== "countdown" || countdownTotal === 0) return;
   const radius = 80;
@@ -191,42 +261,20 @@ const updateProgressRing = () => {
   ring.style.strokeDashoffset = `${offset}`;
 };
 
-const toastMessage = (msg) => {
-  toast.innerText = msg;
-  toast.classList.add("show");
-  setTimeout(() => toast.classList.remove("show"), 3000);
-};
-
-const toggleTheme = () => {
-  theme = theme === "dark" ? "light" : "dark";
-  document.body.className = `${theme} ${mode}-mode`;
-  localStorage.setItem("theme", theme);
-  applyBackground();
-  const themeBtn = document.getElementById("toggleTheme");
-  themeBtn.classList.add("rotated");
-  themeBtn.innerText = theme === "dark" ? "🌙" : "☀️";
-  setTimeout(() => themeBtn.classList.remove("rotated"), 400);
-  toastMessage(`Theme: ${theme.toUpperCase()}`);
-};
-
-const applyBackground = () => {
-  const image = backgrounds[theme][mode];
-  document.body.style.backgroundImage = `url('${image}')`;
-};
-
 const updateRealTimeClock = () => {
-  const now = new Date();
-  realTimeClock.innerText = now.toLocaleTimeString();
+  realTimeClock.innerText = new Date().toLocaleTimeString();
 };
 
 const drawAnalogClock = () => {
   const ctx = analogClock.getContext("2d");
   const now = new Date();
   const width = analogClock.width;
-  const height = analogClock.height;
   const radius = width / 2;
-  ctx.clearRect(0, 0, width, height);
+
+  ctx.clearRect(0, 0, width, width);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.translate(radius, radius);
+
   ctx.beginPath();
   ctx.arc(0, 0, radius - 4, 0, 2 * Math.PI);
   ctx.fillStyle = "rgba(255,255,255,0.08)";
@@ -250,7 +298,8 @@ const drawAnalogClock = () => {
   drawHand((hour * Math.PI / 6) + (minute * Math.PI / 360), radius * 0.5, 5, "#fff");
   drawHand(minute * Math.PI / 30, radius * 0.7, 3, "#ccc");
   drawHand(second * Math.PI / 30, radius * 0.9, 2, "#f00");
-  ctx.translate(-radius, -radius);
+
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
 };
 
 const showLoader = () => {
@@ -258,45 +307,33 @@ const showLoader = () => {
   setTimeout(() => loader.style.display = "none", 1500);
 };
 
+const toggleMode = () => {
+  reset();
+  mode = mode === "stopwatch" ? "countdown" : "stopwatch";
+  document.getElementById("modeToggle").innerText = mode === "stopwatch"
+    ? "Switch to Countdown" : "Switch to Stopwatch";
+  document.body.className = `${theme} ${mode}-mode`;
+  applyBackground();
+
+  const isCountdown = mode === "countdown";
+
+  document.getElementById("progressRing").style.display = isCountdown ? "block" : "none";
+  document.querySelector(".alarm-box").style.display = isCountdown ? "block" : "none";
+
+  // Lap controls visibility
+  document.getElementById("lap").style.display = isCountdown ? "none" : "inline-block";
+  document.getElementById("resetLap").style.display = isCountdown ? "none" : "inline-block";
+  document.querySelector('button[onclick="exportLaps()"]').style.display = isCountdown ? "none" : "inline-block";
+
+  toastMessage(`Mode switched to ${mode.toUpperCase()}`);
+};
+
+
 window.onload = () => {
   document.body.className = `${theme} ${mode}-mode`;
   applyBackground();
   updateTimerDisplay();
+  document.getElementById("muteToggle").innerText = isMuted ? "🔇" : "🔊";
   setInterval(updateRealTimeClock, 1000);
   setInterval(drawAnalogClock, 1000);
-};
-
-const toggleMode = () => {
-  reset();
-  mode = mode === "stopwatch" ? "countdown" : "stopwatch";
-
-  document.getElementById("modeToggle").innerText = mode === "stopwatch"
-    ? "Switch to Countdown"
-    : "Switch to Stopwatch";
-
-  document.body.classList.remove("stopwatch-mode", "countdown-mode");
-  document.body.classList.add(`${mode}-mode`);
-  applyBackground();
-
-  const ringEl = document.getElementById("progressRing");
-  const alarmBoxEl = document.querySelector(".alarm-box");
-  const lapBtn = document.getElementById("lap");
-  const resetLapBtn = document.getElementById("resetLap");
-
-  if (mode === "countdown") {
-    ringEl.style.display = "block";
-    alarmBoxEl.style.display = "block";
-    lapBtn.disabled = true;
-    resetLapBtn.disabled = true;
-    setTimeout(() => {
-      document.querySelector(".alarm-box").scrollIntoView({ behavior: "smooth", block: "center" });
-    }, 300);
-  } else {
-    ringEl.style.display = "none";
-    alarmBoxEl.style.display = "none";
-    lapBtn.disabled = false;
-    resetLapBtn.disabled = false;
-  }
-
-  toastMessage(`Mode switched to ${mode.toUpperCase()}`);
 };
