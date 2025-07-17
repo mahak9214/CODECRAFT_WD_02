@@ -337,3 +337,6 @@ body.countdown-mode .alarm-box {
   margin-top: 8px;
   padding: 16px;
 }
+body.countdown-mode .laps {
+  display: none;
+}
