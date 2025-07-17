@@ -239,7 +239,7 @@ const toggleMode = () => {
   alarmBox.style.display = isCountdown ? "block" : "none";
   document.getElementById("lap").style.display = isCountdown ? "none" : "inline-block";
   document.getElementById("resetLap").style.display = isCountdown ? "none" : "inline-block";
- document.getElementById("exportLapsBtn").style.display = isCountdown ? "none" : "inline-block";
+  document.querySelector('button[onclick="exportLaps()"]').style.display = isCountdown ? "none" : "inline-block";
   toastMessage(`Mode switched to ${mode.toUpperCase()}`);
 };
 
